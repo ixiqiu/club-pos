@@ -81,6 +81,9 @@ export function buildReceiptLines(order: Order, settings: AppSettings): string[]
   if (order.mode === 'credit' && !order.payment) {
     out.push('')
     out.push('※ 赊账：未收款，待登记')
+  } else if (order.mode === 'presale' && !order.payment) {
+    out.push('')
+    out.push('※ 预售：未收款，交付/取货时请收款')
   } else if (order.payment) {
     const methodText = order.payment.method === 'cash' ? '现金' : '在线收款'
     out.push(amountRow(`付款方式`, methodText, cols, false))
@@ -108,8 +111,10 @@ export function buildReceiptLines(order: Order, settings: AppSettings): string[]
   }
 
   // 状态提示
-  if (order.status === 'pending_pickup') out.push(center('【预售 · 待取货】', cols))
-  if (order.status === 'unpaid') out.push(center('【赊账 · 待收款】', cols))
+  if (order.status === 'pending_pickup') {
+    out.push(center(order.payment ? '【预售 · 待取货】' : '【预售 · 待交付 · 未收款】', cols))
+  }
+  if (order.status === 'unpaid') out.push(center('【待收款】', cols))
 
   out.push('')
   if (settings.receiptFooter) {

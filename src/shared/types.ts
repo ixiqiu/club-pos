@@ -83,7 +83,7 @@ export type OrderStatus = 'normal' | 'pending_pickup' | 'unpaid' | 'void'
 
 export interface OrderEvent {
   at: number
-  kind: 'picked' | 'settled' | 'void' | 'reprint'
+  kind: 'picked' | 'delivered' | 'settled' | 'void' | 'reprint'
   note?: string
   /** settle 时收的金额（元） */
   amountYuan?: number
@@ -177,6 +177,8 @@ export type OrderUpdate = {
   payment?: OrderPayment | null
   /** at 由主进程自动补 */
   event?: Omit<OrderEvent, 'at'>
+  /** at 由主进程自动补；可一次追加多个事件 */
+  events?: Omit<OrderEvent, 'at'>[]
 }
 
 export interface ImportResult {

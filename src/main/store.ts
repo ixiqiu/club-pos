@@ -182,6 +182,7 @@ class DataStore {
       status?: Order['status']
       payment?: Order['payment'] | null
       event?: Omit<Order['events'][number], 'at'>
+      events?: Omit<Order['events'][number], 'at'>[]
     }
   ): Promise<Order | null> {
     const order = this.store.orders.find((o) => o.id === id)
@@ -194,6 +195,9 @@ class DataStore {
     }
     if (mutation.event) {
       order.events = [...order.events, { ...mutation.event, at: Date.now() }]
+    }
+    for (const ev of mutation.events ?? []) {
+      order.events = [...order.events, { ...ev, at: Date.now() }]
     }
     await this.persist()
     return structuredClone(order)

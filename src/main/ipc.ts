@@ -80,7 +80,8 @@ export function registerIpc(): void {
       const order = await dataStore.updateOrder(mutation.id, {
         status: mutation.status,
         payment: mutation.payment,
-        event: mutation.event
+        event: mutation.event,
+        events: mutation.events
       })
       return { order }
     } catch (err) {

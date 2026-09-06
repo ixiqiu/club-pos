@@ -76,7 +76,9 @@ export default function Reports() {
         if (o.payment.method === 'cash') cash += o.totalYuan
         else online += o.totalYuan
       }
-      if (o.status === 'unpaid') unpaid += o.totalYuan
+      if (o.status === 'unpaid' || (o.status === 'pending_pickup' && !o.payment)) {
+        unpaid += o.totalYuan
+      }
       if (o.status === 'pending_pickup') {
         pendingQty++
         pendingAmt += o.totalYuan
@@ -158,7 +160,7 @@ export default function Reports() {
         <Stat label="实收总额" value={c(stats.paid)} sub="现金+在线" accent />
         <Stat label="现金收款" value={c(stats.cash)} />
         <Stat label="在线收款" value={c(stats.online)} />
-        <Stat label="赊账待收" value={c(stats.unpaid)} sub="尚未收回" warn={stats.unpaid > 0} />
+        <Stat label="待收金额" value={c(stats.unpaid)} sub="赊账+预售未收" warn={stats.unpaid > 0} />
         <Stat label="预售待取" value={`${stats.pendingQty} 单`} sub={c(stats.pendingAmt)} warn={stats.pendingQty > 0} />
         <Stat label="优惠让利" value={c(stats.discount)} sub="含临时优惠" />
         <Stat label="客单价" value={c(stats.count ? stats.paid / stats.count : 0)} />
@@ -220,6 +222,8 @@ export default function Reports() {
                   <td>
                     {o.status === 'void' ? (
                       <span className="badge gray">作废</span>
+                    ) : o.status === 'pending_pickup' && !o.payment ? (
+                      <span className="badge red">待交付·未收款</span>
                     ) : o.status === 'pending_pickup' ? (
                       <span className="badge amber">待取货</span>
                     ) : o.status === 'unpaid' ? (

@@ -21,6 +21,9 @@ import { buildReceiptHtml } from '../../../shared/receipt'
 import type { BuyerInfo, Order, OrderDraft, PaymentMethod, Product, SaleMode } from '../../../shared/types'
 import './checkout.css'
 
+/** 收款选择：现金 / 在线 / 暂不收款（预售送货/取货时再收） */
+type PayChoice = PaymentMethod | 'later'
+
 export default function Checkout() {
   const { products, promotions, settings, refreshAfterOrder } = useApp()
   const toast = useToast((s) => s.toast)
@@ -30,7 +33,7 @@ export default function Checkout() {
   const [manual, setManual] = useState<ManualDiscount | null>(null)
   const [showManual, setShowManual] = useState(false)
   const [mode, setMode] = useState<SaleMode>('sale')
-  const [pay, setPay] = useState<PaymentMethod>('cash')
+  const [pay, setPay] = useState<PayChoice>('cash')
   const [received, setReceived] = useState('')
   const [buyer, setBuyer] = useState<BuyerInfo>({ klass: '', name: '', note: '' })
   const [q, setQ] = useState('')
@@ -86,12 +89,17 @@ export default function Checkout() {
   const receivedCents = pay === 'cash' ? parseYuanToCents(received) : null
   const changeCents = receivedCents != null ? Math.max(0, receivedCents - totals.totalC) : 0
 
+  // 收款是否满足：普通必须当场收；预售可「暂不收款」（送货/取货时再收）；赊账必不收款
+  const paymentOk =
+    mode === 'credit' ||
+    (mode === 'presale' && pay === 'later') ||
+    pay === 'online' ||
+    (receivedCents != null && !Number.isNaN(receivedCents) && receivedCents >= totals.totalC)
+
   const canSubmit =
     lines.length > 0 &&
     (mode === 'sale' || (buyer.klass.trim() && buyer.name.trim())) &&
-    (mode === 'credit' ||
-      pay === 'online' ||
-      (receivedCents != null && !Number.isNaN(receivedCents) && receivedCents >= totals.totalC))
+    paymentOk
 
   async function submit() {
     if (busy || !canSubmit) return
@@ -112,6 +120,8 @@ export default function Checkout() {
         discounts.push({ kind: 'manual', title: totals.manual.title, amountYuan: totals.manual.amountC / 100 })
 
       const isCredit = mode === 'credit'
+      const isPresale = mode === 'presale'
+      const noPayNow = isCredit || (isPresale && pay === 'later')
       const draft: OrderDraft = {
         mode,
         items,
@@ -119,7 +129,7 @@ export default function Checkout() {
         subtotalYuan: totals.subtotalC / 100,
         totalYuan: totals.totalC / 100,
         buyer: mode === 'sale' ? null : { ...buyer },
-        payment: isCredit
+        payment: noPayNow
           ? null
           : pay === 'cash'
             ? { method: 'cash', receivedYuan: (receivedCents ?? totals.totalC) / 100 }
@@ -144,6 +154,7 @@ export default function Checkout() {
       setReceived('')
       setBuyer({ klass: '', name: '', note: '' })
       setMode('sale')
+      setPay('cash')
       await refreshAfterOrder()
     } finally {
       setBusy(false)
@@ -162,6 +173,11 @@ export default function Checkout() {
 
   const isPresale = mode === 'presale'
   const isCredit = mode === 'credit'
+
+  function chooseMode(m: SaleMode) {
+    setMode(m)
+    if (m !== 'presale' && pay === 'later') setPay('cash')
+  }
 
   return (
     <div className="checkout-wrap">
@@ -308,13 +324,13 @@ export default function Checkout() {
               交易类型
             </div>
             <div className="mode-seg">
-              <button className={mode === 'sale' ? 'on-sale' : ''} onClick={() => setMode('sale')}>
+              <button className={mode === 'sale' ? 'on-sale' : ''} onClick={() => chooseMode('sale')}>
                 普通
               </button>
-              <button className={mode === 'presale' ? 'on-presale' : ''} onClick={() => setMode('presale')}>
+              <button className={mode === 'presale' ? 'on-presale' : ''} onClick={() => chooseMode('presale')}>
                 预售登记
               </button>
-              <button className={mode === 'credit' ? 'on-credit' : ''} onClick={() => setMode('credit')}>
+              <button className={mode === 'credit' ? 'on-credit' : ''} onClick={() => chooseMode('credit')}>
                 赊账登记
               </button>
             </div>
@@ -323,7 +339,9 @@ export default function Checkout() {
           {(isPresale || isCredit) && (
             <div className="buyer-box">
               <div style={{ fontSize: 12, color: 'var(--amber)', fontWeight: 600 }}>
-                {isPresale ? '预售：先收款，货到后凭票取货' : '赊账：先取货，之后登记收款'}
+                {isPresale
+                  ? '预售：可当场收款，也可送货/取货时再收（选「🚚 送货时收款」）'
+                  : '赊账：先取货，之后登记收款'}
               </div>
               <input
                 className="input"
@@ -350,7 +368,7 @@ export default function Checkout() {
             <>
               <div>
                 <div className="pb-title" style={{ marginBottom: 6, color: 'var(--text-2)', fontSize: 12 }}>
-                  收款方式
+                  收款方式{isPresale ? '（预售可选稍后收）' : ''}
                 </div>
                 <div className="pay-seg">
                   <button className={pay === 'cash' ? 'on' : ''} onClick={() => setPay('cash')}>
@@ -359,8 +377,24 @@ export default function Checkout() {
                   <button className={pay === 'online' ? 'on' : ''} onClick={() => setPay('online')}>
                     📱 在线
                   </button>
+                  {isPresale && (
+                    <button className={pay === 'later' ? 'on' : ''} onClick={() => setPay('later')}>
+                      🚚 送货时收款
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {pay === 'later' && isPresale && (
+                <div
+                  className="promo-box"
+                  style={{ background: '#fff7e8', borderStyle: 'solid', borderColor: '#f0d9a8' }}
+                >
+                  <span style={{ fontSize: 13 }}>
+                    🚚 本次不收款。送货/取货时在「订单记录」里点 <b>交付并收款</b>，或先标记交付、之后再收。
+                  </span>
+                </div>
+              )}
 
               {pay === 'cash' && totals.totalC > 0 && (
                 <div>
@@ -427,11 +461,13 @@ export default function Checkout() {
               ? '处理中…'
               : isCredit
                 ? '确认赊账登记'
-                : isPresale
-                  ? `确认预售收款 ${fmtYuan(totals.totalC)}`
-                  : pay === 'cash'
-                    ? `收款 ${fmtYuan(totals.totalC)}`
-                    : '确认已在线收款'}
+                : isPresale && pay === 'later'
+                  ? `确认预售登记（暂不收款）`
+                  : isPresale
+                    ? `确认预售收款 ${fmtYuan(totals.totalC)}`
+                    : pay === 'cash'
+                      ? `收款 ${fmtYuan(totals.totalC)}`
+                      : '确认已在线收款'}
           </button>
         </div>
       </div>
@@ -455,9 +491,11 @@ export default function Checkout() {
             <div className="meta">
               单号 {done.order.id}
               <br />
-              {done.order.mode === 'credit'
-                ? '已登记赊账（待收款）'
-                : done.order.payment?.receivedYuan != null
+              {!done.order.payment
+                ? done.order.mode === 'credit'
+                  ? '已登记赊账（待收款）'
+                  : '已登记预售（暂未收款，交付时再收）'
+                : done.order.payment.receivedYuan != null
                   ? `实收 ${moneyText(yuanToCents(done.order.payment.receivedYuan))}`
                   : '在线收款'}
               {done.order.payment?.changeYuan != null && done.order.payment.changeYuan > 0 && (
