@@ -30,18 +30,15 @@ export function registerIpc(): void {
   })
 
   ipcMain.handle('data:saveProducts', async (_e, products) => {
-    const s = await dataStore.replaceProducts(products)
-    return { data: s }
+    return dataStore.replaceProducts(products)
   })
 
   ipcMain.handle('data:savePromotions', async (_e, promotions) => {
-    const s = await dataStore.replacePromotions(promotions)
-    return { data: s }
+    return dataStore.replacePromotions(promotions)
   })
 
   ipcMain.handle('data:saveSettings', async (_e, patch: Partial<AppSettings>) => {
-    const s = await dataStore.replaceSettings(patch)
-    return { data: s }
+    return dataStore.replaceSettings(patch)
   })
 
   ipcMain.handle('data:applySample', async () => {
@@ -54,7 +51,7 @@ export function registerIpc(): void {
       settings: base.settings
     }
     const s = await dataStore.replace(merged)
-    return { data: s }
+    return s
   })
 
   ipcMain.handle('data:reset', async () => {
@@ -65,7 +62,7 @@ export function registerIpc(): void {
       orders: [],
       settings: { ...(await dataStore.init()).settings }
     })
-    return { data: s }
+    return s
   })
 
   ipcMain.handle('orders:create', async (_e, draft: OrderDraft) => {
