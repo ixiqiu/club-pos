@@ -5,6 +5,7 @@ import { listPrinters, printHtml } from './print'
 import type {
   AppMeta,
   AppSettings,
+  DataDirResult,
   ImportResult,
   OrderDraft,
   OrderUpdate
@@ -16,7 +17,7 @@ export function registerIpc(): void {
     return {
       version: process.env.npm_package_version || '',
       platform: process.platform,
-      dataDir: dataStore.dataDir
+      dataRoot: dataStore.dataRoot
     }
   })
 
@@ -149,9 +150,21 @@ export function registerIpc(): void {
   })
 
   ipcMain.handle('data:openDir', async () => {
-    const s = await dataStore.init()
-    shell.openPath(dataStore.dataDir)
-    void s
+    await dataStore.init()
+    shell.openPath(dataStore.dataRoot)
+  })
+
+  ipcMain.handle('data:chooseDataDir', async (): Promise<DataDirResult | null> => {
+    await dataStore.init()
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: '选择新的数据目录（将自动迁移账本与备份到此目录）',
+      defaultPath: dataStore.dataRoot,
+      properties: ['openDirectory', 'createDirectory']
+    })
+    if (canceled || filePaths.length === 0) return null
+    const target = filePaths[0]
+    const res = await dataStore.moveDataRoot(target)
+    return res.ok ? { ok: true, dataRoot: dataStore.dataRoot } : res
   })
 
   ipcMain.handle('printer:list', async () => {

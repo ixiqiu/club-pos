@@ -5,7 +5,7 @@ import { buildTestHtml } from '../../../shared/receipt'
 import type { PrinterInfo } from '../../../shared/types'
 
 export default function Settings() {
-  const { settings, meta, setSettings, reload } = useApp()
+  const { settings, meta, setSettings, reload, init } = useApp()
   const toast = useToast((s) => s.toast)
   const [storeName, setStoreName] = useState(settings.storeName)
   const [storeNote, setStoreNote] = useState(settings.storeNote ?? '')
@@ -60,6 +60,24 @@ export default function Settings() {
       toast(r.ok ? '测试小票已发送打印' : '打印失败：' + (r.error || ''))
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function changeDataRoot() {
+    if (
+      !window.confirm(
+        '将把当前数据（store.json 账本与每日备份）复制到你选择的新目录，并切换程序使用新位置。\n\n原目录文件会保留，确认无误后可自行删除。\n\n继续？'
+      )
+    )
+      return
+    try {
+      const r = await window.clubpos.chooseDataDir()
+      if (!r) return
+      if (!r.ok) return toast('更改失败：' + (r.error || '未知错误'))
+      await init()
+      toast('数据目录已迁移：' + r.dataRoot)
+    } catch (e) {
+      toast('更改失败：' + (e instanceof Error ? e.message : String(e)))
     }
   }
 
@@ -185,11 +203,17 @@ export default function Settings() {
           <label>数据目录（拷贝此文件夹即可完整迁移）</label>
           <div className="row">
             <code style={{ flex: 1, background: '#f1f3f6', padding: '8px 10px', borderRadius: 8, fontSize: 12, wordBreak: 'break-all' }}>
-              {meta?.dataDir ?? '…'}
+              {meta?.dataRoot ?? '…'}
             </code>
             <button className="btn" onClick={() => window.clubpos.openDataDir()}>
               打开
             </button>
+            <button className="btn" onClick={changeDataRoot}>
+              📂 更改数据目录…
+            </button>
+          </div>
+          <div style={{ color: 'var(--text-2)', fontSize: 13, lineHeight: 1.8 }}>
+            此文件夹内含 <code>data/</code>（账本 store.json）与 <code>backups/</code>（每日备份），整体拷贝即可迁移到别的电脑。
           </div>
         </div>
         <div className="row" style={{ flexWrap: 'wrap' }}>

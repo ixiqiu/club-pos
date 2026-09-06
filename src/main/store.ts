@@ -3,7 +3,7 @@
 
 import { app } from 'electron'
 import { promises as fs } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import {
   DEFAULT_SETTINGS,
   SCHEMA_VERSION,
@@ -26,18 +26,53 @@ export function emptyStore(): Store {
   return { products: [], promotions: [], orders: [], settings: { ...DEFAULT_SETTINGS } }
 }
 
+async function pathExists(p: string): Promise<boolean> {
+  try {
+    await fs.access(p)
+    return true
+  } catch {
+    return false
+  }
+}
+
 class DataStore {
   private store: Store = emptyStore()
   private loaded = false
+  private customRoot: string | null = null
+  private pointerLoaded = false
 
+  /** 指针文件固定在默认 userData 目录，记录自定义数据根目录 */
+  private get pointerFile(): string {
+    return join(app.getPath('userData'), 'data-root.json')
+  }
+
+  /** 数据根目录：内含 data/（账本）与 backups/（每日备份） */
+  get dataRoot(): string {
+    return this.customRoot || app.getPath('userData')
+  }
   get dataDir(): string {
-    return join(app.getPath('userData'), 'data')
+    return join(this.dataRoot, 'data')
   }
   get backupDir(): string {
-    return join(app.getPath('userData'), 'backups')
+    return join(this.dataRoot, 'backups')
   }
   private get filePath(): string {
     return join(this.dataDir, 'store.json')
+  }
+
+  /** 启动时读取自定义数据根目录指针（仅一次） */
+  private async loadPointer(): Promise<void> {
+    if (this.pointerLoaded) return
+    this.pointerLoaded = true
+    try {
+      const raw = await fs.readFile(this.pointerFile, 'utf-8')
+      const p = JSON.parse(raw) as { dataRoot?: unknown }
+      if (p.dataRoot && typeof p.dataRoot === 'string' && p.dataRoot.trim()) {
+        this.customRoot = p.dataRoot
+      }
+    } catch {
+      /* 尚无指针文件，使用默认目录 */
+    }
   }
 
   private async ensureDirs(): Promise<void> {
@@ -47,6 +82,7 @@ class DataStore {
 
   async init(): Promise<Store> {
     if (this.loaded) return this.store
+    await this.loadPointer()
     await this.ensureDirs()
     try {
       const raw = await fs.readFile(this.filePath, 'utf-8')
@@ -229,6 +265,59 @@ class DataStore {
     const map = new Map(base.map((x) => [x.id, x]))
     for (const x of incoming) map.set(x.id, x)
     return [...map.values()]
+  }
+
+  // ---------- 更改数据根目录 ----------
+  /**
+   * 把账本与备份迁移到新目录并切换。目标目录需为空（或尚无 store.json）。
+   * 迁移采用「复制」，成功后原目录文件保留，确认无误后可手动删除。
+   */
+  async moveDataRoot(targetRoot: string): Promise<{ ok: boolean; error?: string }> {
+    const curRoot = this.dataRoot
+    const norm = resolve(targetRoot)
+    try {
+      if (norm === curRoot) return { ok: true }
+      if (norm.startsWith(curRoot + sep)) {
+        return { ok: false, error: '新目录不能位于当前数据目录内部' }
+      }
+      await this.init() // 确保当前账本已就绪
+      const nd = join(norm, 'data')
+      const nb = join(norm, 'backups')
+      if (await pathExists(join(nd, 'store.json'))) {
+        return { ok: false, error: '目标目录已有数据（store.json），请换一个空目录，或先自行处理' }
+      }
+      await fs.mkdir(nd, { recursive: true })
+      await fs.mkdir(nb, { recursive: true })
+
+      // 复制账本
+      const curStore = join(this.dataDir, 'store.json')
+      if (await pathExists(curStore)) {
+        await fs.copyFile(curStore, join(nd, 'store.json'))
+      }
+      // 复制每日备份
+      try {
+        const files = await fs.readdir(this.backupDir)
+        for (const f of files) {
+          if (f.endsWith('.json')) {
+            await fs.copyFile(join(this.backupDir, f), join(nb, f)).catch(() => undefined)
+          }
+        }
+      } catch {
+        /* 尚无备份目录则跳过 */
+      }
+
+      // 写入指针并切换（指针固定在默认 userData 目录）
+      await fs.mkdir(app.getPath('userData'), { recursive: true })
+      await fs.writeFile(this.pointerFile, JSON.stringify({ dataRoot: norm }, null, 2), 'utf-8')
+      this.customRoot = norm
+      this.store = emptyStore()
+      this.loaded = false
+      this.backedTodayKey = ''
+      await this.init()
+      return { ok: true }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    }
   }
 }
 

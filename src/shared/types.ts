@@ -186,10 +186,18 @@ export interface ImportResult {
   orders: number
 }
 
+/** 更改数据目录的结果 */
+export interface DataDirResult {
+  ok: boolean
+  error?: string
+  dataRoot?: string
+}
+
 export interface AppMeta {
   version: string
   platform: string
-  dataDir: string
+  /** 数据根目录：内含 data/（账本）与 backups/（每日备份），拷贝即完整迁移 */
+  dataRoot: string
 }
 
 // ---------- IPC / 渲染进程 API ----------
@@ -213,6 +221,8 @@ export interface ClubPosApi {
   exportCsv(content: string, suggestedName: string): Promise<string | null>
   importData(mode: 'replace' | 'merge'): Promise<ImportResult | null>
   openDataDir(): Promise<void>
+  /** 弹窗选择新数据目录并迁移（含 store.json 与每日备份）。取消返回 null。 */
+  chooseDataDir(): Promise<DataDirResult | null>
   listPrinters(): Promise<PrinterInfo[]>
   printHtml(options: {
     html: string

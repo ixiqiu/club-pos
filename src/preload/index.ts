@@ -16,6 +16,7 @@ const api: ClubPosApi = {
   exportCsv: (content, suggestedName) => ipcRenderer.invoke('data:exportCsv', content, suggestedName),
   importData: (mode) => ipcRenderer.invoke('data:import', mode),
   openDataDir: () => ipcRenderer.invoke('data:openDir'),
+  chooseDataDir: () => ipcRenderer.invoke('data:chooseDataDir'),
   listPrinters: () => ipcRenderer.invoke('printer:list'),
   printHtml: (options) => ipcRenderer.invoke('printer:print', options)
 }
