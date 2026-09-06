@@ -1,7 +1,7 @@
 {
   "name": "club-pos",
   "productName": "社团收银台",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "社团收银系统：收银 / 预售与赊账 / 商品与优惠 / 报表导出。本地数据，支持 Windows 与 Linux。",
   "main": "out/main/index.js",
   "author": "XiQiu <ixiqiu>",
