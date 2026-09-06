@@ -1,0 +1,42 @@
+appId: cn.club.pos
+productName: 社团收银台
+copyright: Copyright © 2026 XiQiu
+
+directories:
+  buildResources: build
+  output: release
+
+files:
+  - out/**
+  - assets/**
+  - package.json
+
+asar: true
+npmRebuild: false
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 社团收银台
+
+linux:
+  icon: build/icon.png
+  category: Office
+  maintainer: XiQiu
+  synopsis: 社团收银台
+  target:
+    - AppImage
+    - deb
+
+publish: null

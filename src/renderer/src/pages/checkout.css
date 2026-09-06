@@ -1,0 +1,401 @@
+/* 收银台页面的局部样式 */
+.checkout-wrap {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 14px;
+  height: 100%;
+}
+
+.checkout-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.searchbar {
+  display: flex;
+  gap: 8px;
+}
+
+.searchbar .input {
+  max-width: 320px;
+}
+
+.cat-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cat-chips button {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 13px;
+}
+
+.cat-chips button.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.prod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 10px;
+  overflow: auto;
+  flex: 1;
+  align-content: start;
+  padding: 2px;
+}
+
+.prod-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 10px 10px;
+  text-align: center;
+  transition: all 0.12s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prod-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.prod-card .p-name {
+  font-weight: 600;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prod-card .p-cat {
+  color: var(--text-2);
+  font-size: 11px;
+}
+
+.prod-card .p-price {
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+/* 右侧结算栏 */
+.cart-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cart-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cart-items {
+  overflow: auto;
+  max-height: 190px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-bottom: 1px solid #f1f3f6;
+}
+
+.cart-row .c-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cart-row .c-price {
+  color: var(--text-2);
+  font-size: 12px;
+  width: 52px;
+  text-align: right;
+}
+
+.cart-row .qty-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.cart-row .qty-ctl button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.cart-row .qty-ctl .q {
+  min-width: 30px;
+  text-align: center;
+}
+
+.cart-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+}
+
+.promo-box {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fafbfc;
+}
+
+.promo-box .pb-title {
+  font-size: 12px;
+  color: var(--text-2);
+  display: flex;
+  justify-content: space-between;
+}
+
+.promo-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.promo-chip label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.promo-chip .p-amount {
+  color: var(--green);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.promo-chip .p-hint {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.mode-seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.mode-seg button {
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 8px 4px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mode-seg button.on-sale {
+  background: #eef4ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.mode-seg button.on-presale {
+  background: var(--amber-bg);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.mode-seg button.on-credit {
+  background: var(--red-bg);
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+.buyer-box {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fffdf7;
+}
+
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.totals .t-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.totals .disc {
+  color: var(--green);
+}
+
+.tot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.amount-big {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--brand-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.pay-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pay-seg button {
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.pay-seg button.on {
+  background: #eef4ff;
+  border-color: #2563eb;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.cash-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cash-line .input {
+  width: 150px;
+  text-align: right;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chips button {
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.change-box {
+  text-align: center;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--green-bg);
+  color: var(--green);
+  font-size: 13px;
+}
+
+.change-box b {
+  font-size: 26px;
+}
+
+.foot-btn {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.foot-btn .btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 17px;
+  border-radius: 10px;
+}
+
+/* 成功弹层 */
+.success-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 40, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.success-card {
+  background: #fff;
+  border-radius: 16px;
+  width: 400px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.2);
+}
+
+.success-card .ok-ico {
+  font-size: 46px;
+}
+
+.success-card .big {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--brand-dark);
+  margin: 8px 0;
+}
+
+.success-card .meta {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.success-card .btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 13px;
+  font-size: 16px;
+}

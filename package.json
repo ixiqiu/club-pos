@@ -1,0 +1,37 @@
+{
+  "name": "club-pos",
+  "productName": "社团收银台",
+  "version": "0.1.0",
+  "description": "社团收银系统：收银 / 预售与赊账 / 商品与优惠 / 报表导出。本地数据，支持 Windows 与 Linux。",
+  "main": "out/main/index.js",
+  "author": "XiQiu <ixiqiu>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "start": "electron-vite preview",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "test": "vitest run",
+    "build": "electron-vite build",
+    "dist": "electron-vite build && electron-builder --dir",
+    "dist:win": "electron-vite build && electron-builder --win",
+    "dist:linux": "electron-vite build && electron-builder --linux"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2"
+  }
+}
