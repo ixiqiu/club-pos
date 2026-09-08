@@ -136,18 +136,42 @@ function fmtDate(ts: number): string {
 export function buildReceiptHtml(order: Order, settings: AppSettings): string {
   const lines = buildReceiptLines(order, settings)
   const mm = settings.receiptWidthMm
-  const fontSize = mm >= 80 ? 14 : 13
+  // 热敏纸的可打印区比纸宽小（58mm 纸约 48mm、80mm 纸约 72mm）。
+  // 初始字号适中；打印页内联脚本会实测 pre 宽度，超宽自动缩字号，
+  // 保证行尾右对齐的金额不会被裁掉（此前 13px 时整行约 62mm 超出 58mm 纸宽）。
+  const fontSize = mm >= 80 ? 11 : 10
+  const fitTargetMm = mm >= 80 ? 70 : 46
   return `<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8" />
 <style>
   @page { size: ${mm}mm auto; margin: 0; }
   html,body { margin:0; padding:0; }
-  body { width: ${mm}mm; font-family: 'Sarasa Mono SC','Noto Sans Mono CJK SC','Microsoft YaHei Mono','Courier New',monospace; font-size: ${fontSize}px; }
+  body {
+    width: ${mm}mm;
+    font-family: 'Sarasa Mono SC','Sarasa Term SC','Noto Sans Mono CJK SC','Noto Sans CJK SC','WenQuanYi Micro Hei Mono','Microsoft YaHei Mono','Microsoft YaHei','Courier New',monospace;
+    font-size: ${fontSize}px;
+  }
   pre { margin: 0; white-space: pre; }
 </style></head>
 <body><pre>${lines
     .map((l) => escapeHtml(l) || ' ')
-    .join('\n')}</pre></body></html>`
+    .join('\n')}</pre>
+<script>
+// 打印前自动把内容缩到可打印区内，避免右侧金额被裁
+;(function () {
+  var targetPx = (${fitTargetMm} / 25.4) * 96
+  var pre = document.querySelector('pre')
+  var bodyStyle = document.body.style
+  if (!pre) return
+  var fs = parseFloat(getComputedStyle(document.body).fontSize) || ${fontSize}
+  for (var i = 0; i < 14 && fs > 5.5; i++) {
+    if (pre.scrollWidth <= targetPx) break
+    fs = fs - 0.5
+    bodyStyle.fontSize = fs + 'px'
+  }
+})()
+</script>
+</body></html>`
 }
 
 /** 生成测试小票（用于设置里调试打印机），走相同排版路径 */
