@@ -143,6 +143,7 @@ export function buildReceiptHtml(order: Order, settings: AppSettings): string {
   const fitTargetMm = mm >= 80 ? 70 : 46
   return `<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8" />
+<title>社团收银台小票 ${escapeHtml(order.id)}</title>
 <style>
   @page { size: ${mm}mm auto; margin: 0; }
   html,body { margin:0; padding:0; }
