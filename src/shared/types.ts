@@ -126,6 +126,12 @@ export interface AppSettings {
   receiptFooter?: string
   /** 指定小票打印机（空 = 系统默认打印机） */
   printerName?: string
+  /**
+   * 打印方式：
+   * - 'system' 系统打印（HTML 走打印机驱动）
+   * - 'escpos' 小票直打（ESC/POS 点阵指令，Windows 推荐，字迹清晰不裁切）
+   */
+  printMode?: 'escpos' | 'system'
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -134,7 +140,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   receiptWidthMm: 58,
   receiptCopies: 2,
   receiptFooter: '谢谢惠顾，欢迎再来！',
-  printerName: ''
+  printerName: '',
+  printMode: 'system'
 }
 
 // ---------- 数据文件 ----------
@@ -227,9 +234,12 @@ export interface ClubPosApi {
   chooseDataDir(): Promise<DataDirResult | null>
   listPrinters(): Promise<PrinterInfo[]>
   printHtml(options: {
-    html: string
+    html?: string
+    lines?: string[]
     deviceName?: string
     copies?: number
+    docName?: string
+    mode?: 'escpos' | 'system'
   }): Promise<{ ok: boolean; error?: string }>
 }
 

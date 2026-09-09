@@ -17,7 +17,7 @@ import {
   parseYuanToCents,
   yuanToCents
 } from '../../../shared/money'
-import { buildReceiptHtml } from '../../../shared/receipt'
+import { buildReceiptHtml, buildReceiptLines } from '../../../shared/receipt'
 import type { BuyerInfo, Order, OrderDraft, PaymentMethod, Product, SaleMode } from '../../../shared/types'
 import './checkout.css'
 
@@ -141,11 +141,13 @@ export default function Checkout() {
         return
       }
       const order = res.order
-      const html = buildReceiptHtml(order, settings)
       const pr = await window.clubpos.printHtml({
-        html,
+        html: buildReceiptHtml(order, settings),
+        lines: buildReceiptLines(order, settings),
         deviceName: settings.printerName || undefined,
-        copies: settings.receiptCopies
+        copies: settings.receiptCopies,
+        docName: `社团收银台小票 ${order.id}`,
+        mode: settings.printMode
       })
       setDone({ order, printOk: pr.ok, printError: pr.error })
       setLines([])
@@ -162,11 +164,13 @@ export default function Checkout() {
   }
 
   async function reprintOrder(order: Order) {
-    const html = buildReceiptHtml(order, settings)
     const pr = await window.clubpos.printHtml({
-      html,
+      html: buildReceiptHtml(order, settings),
+      lines: buildReceiptLines(order, settings),
       deviceName: settings.printerName || undefined,
-      copies: settings.receiptCopies
+      copies: settings.receiptCopies,
+      docName: `社团收银台小票 ${order.id}`,
+      mode: settings.printMode
     })
     toast(pr.ok ? '已补打小票' : '补打失败：' + (pr.error || ''))
   }

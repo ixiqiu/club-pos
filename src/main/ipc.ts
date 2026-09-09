@@ -1,7 +1,7 @@
 import { dialog, ipcMain, shell } from 'electron'
 import { writeFile } from 'node:fs/promises'
 import { dataStore, sampleStore, type Store } from './store'
-import { listPrinters, printHtml } from './print'
+import { listPrinters, printTicket, type PrintTicketOptions } from './print'
 import type {
   AppMeta,
   AppSettings,
@@ -172,7 +172,7 @@ export function registerIpc(): void {
     return listPrinters()
   })
 
-  ipcMain.handle('printer:print', async (_e, options: { html: string; deviceName?: string; copies?: number }) => {
-    return printHtml(options)
+  ipcMain.handle('printer:print', async (_e, options: PrintTicketOptions) => {
+    return printTicket(options)
   })
 }

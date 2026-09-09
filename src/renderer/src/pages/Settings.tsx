@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../store/useApp'
 import { useToast } from '../store/useToast'
-import { buildTestHtml } from '../../../shared/receipt'
-import type { PrinterInfo } from '../../../shared/types'
+import { buildReceiptLines, buildTestHtml, buildTestOrder } from '../../../shared/receipt'
+import type { AppSettings, PrinterInfo } from '../../../shared/types'
 
 export default function Settings() {
   const { settings, meta, setSettings, reload, init } = useApp()
@@ -26,6 +26,18 @@ export default function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /** 汇总表单里尚未保存的小票设置（保存/测试共用） */
+  function draftReceiptSettings(): AppSettings {
+    return {
+      ...settings,
+      storeName: storeName.trim() || '社团收银台',
+      storeNote: storeNote.trim() || undefined,
+      receiptWidthMm: width === '80' ? 80 : 58,
+      receiptCopies: Math.min(10, Math.max(1, parseInt(copies, 10) || 2)),
+      receiptFooter: footer.trim() || undefined
+    }
+  }
+
   async function save() {
     await setSettings({
       storeName: storeName.trim() || '社团收银台',
@@ -41,21 +53,22 @@ export default function Settings() {
     await setSettings({ printerName: name })
   }
 
+  async function savePrintMode(mode: 'escpos' | 'system') {
+    await setSettings({ printMode: mode })
+    toast(mode === 'escpos' ? '已切换为小票直打（ESC/POS）' : '已切换为系统打印（HTML）')
+  }
+
   async function testPrint() {
     setBusy(true)
     try {
-      const html = buildTestHtml({
-        ...settings,
-        storeName: storeName.trim() || '社团收银台',
-        storeNote: storeNote.trim() || undefined,
-        receiptWidthMm: width === '80' ? 80 : 58,
-        receiptCopies: 1,
-        receiptFooter: footer.trim() || undefined
-      })
+      const receiptSettings = draftReceiptSettings()
       const r = await window.clubpos.printHtml({
-        html,
+        html: buildTestHtml(receiptSettings),
+        lines: buildReceiptLines(buildTestOrder(), receiptSettings),
         deviceName: settings.printerName || undefined,
-        copies: 1
+        copies: 1,
+        docName: '社团收银台测试小票',
+        mode: settings.printMode
       })
       toast(r.ok ? '测试小票已发送打印' : '打印失败：' + (r.error || ''))
     } finally {
@@ -183,10 +196,25 @@ export default function Settings() {
             </div>
           </div>
         </div>
+        <div className="field" style={{ marginTop: 10 }}>
+          <label>打印方式</label>
+          <select
+            className="select"
+            style={{ width: 280 }}
+            value={settings.printMode ?? 'system'}
+            onChange={(e) => savePrintMode(e.target.value as 'escpos' | 'system')}
+          >
+            <option value="escpos">🖨️ 小票直打（ESC/POS，推荐 Windows）</option>
+            <option value="system">系统打印（HTML，备用）</option>
+          </select>
+          <div style={{ color: 'var(--text-2)', fontSize: 13, marginTop: 4 }}>
+            {settings.printMode === 'escpos'
+              ? '使用打印机内置点阵字体：清晰、不裁切、数据小不乱码。要求打印机支持 RAW 透传（得力官方驱动即可；若不行，在 Windows 把驱动换成系统自带 Generic / Text Only）。'
+              : '走打印机驱动渲染 HTML：兼容性最广，但 58mm 窄纸下可能遇到字号偏小/裁切/乱码。'}
+          </div>
+        </div>
         <div style={{ color: 'var(--text-2)', fontSize: 13, lineHeight: 1.8 }}>
           💡 提示：先按上面的「保存设置」，再点下面打印测试页，确认小票机出纸正常。
-          <br />
-          💡 得力小票机请安装官方驱动后在 Windows/打印设置里设为默认打印机；小票为纯文本窄版面，适合较慢的串口传输。
         </div>
         <div className="row" style={{ marginTop: 8 }}>
           <button className="btn" disabled={busy} onClick={testPrint}>

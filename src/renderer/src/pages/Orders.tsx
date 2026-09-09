@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useApp } from '../store/useApp'
 import { useToast } from '../store/useToast'
 import { Modal, Seg, moneyText } from '../components/ui'
-import { buildReceiptHtml } from '../../../shared/receipt'
+import { buildReceiptHtml, buildReceiptLines } from '../../../shared/receipt'
 import { dateStrOf, timeStrOf } from '../../../shared/order'
 import { fmtYuan, yuanToCents } from '../../../shared/money'
 import type { Order, OrderStatus, PaymentMethod } from '../../../shared/types'
@@ -54,11 +54,13 @@ export default function Orders() {
   }, [orders, filter, kw])
 
   async function reprint(o: Order) {
-    const html = buildReceiptHtml(o, settings)
     const pr = await window.clubpos.printHtml({
-      html,
+      html: buildReceiptHtml(o, settings),
+      lines: buildReceiptLines(o, settings),
       deviceName: settings.printerName || undefined,
-      copies: settings.receiptCopies
+      copies: settings.receiptCopies,
+      docName: `社团收银台小票 ${o.id}`,
+      mode: settings.printMode
     })
     toast(pr.ok ? '已补打小票' : '补打失败：' + (pr.error || ''))
   }

@@ -175,10 +175,10 @@ export function buildReceiptHtml(order: Order, settings: AppSettings): string {
 </body></html>`
 }
 
-/** 生成测试小票（用于设置里调试打印机），走相同排版路径 */
-export function buildTestHtml(settings: AppSettings): string {
+/** 生成测试小票订单（用于设置里调试打印机，走相同排版路径） */
+export function buildTestOrder(): Order {
   const now = new Date()
-  const pseudo: Order = {
+  return {
     id: `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-9999`,
     ts: now.getTime(),
     mode: 'sale',
@@ -194,7 +194,11 @@ export function buildTestHtml(settings: AppSettings): string {
     status: 'normal',
     events: []
   }
-  return buildReceiptHtml(pseudo, { ...settings, receiptFooter: settings.receiptFooter || '打印机测试页' })
+}
+
+/** 生成测试小票 HTML（用于设置里调试打印机） */
+export function buildTestHtml(settings: AppSettings): string {
+  return buildReceiptHtml(buildTestOrder(), { ...settings, receiptFooter: settings.receiptFooter || '打印机测试页' })
 }
 
 function escapeHtml(s: string): string {
